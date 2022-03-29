@@ -2,7 +2,7 @@
 
 
 The high points:
----------------------
+----------------
 1) In the root dir is the archive dir with contains files like EmailMessage.1648259499154.json.  Each file represents a single email that was sent.  
    The number in the name is a timestamp.  There are some of these files in the zip.
 3) application.properties has gmail email config info for one if my old gmail accts.
@@ -17,6 +17,10 @@ The high points:
 
 
 The low points:
--------------------
+---------------
 I couldn't complete JUnit 5 tests or mockups.  I got stuck here.  There is one trivial email service test but that's it.  I tried a lot of things to get 
 controller testing done but couldn't get a clean build or had many different runtime exceptions. Probably should have stuck with JUnit 4.
+
+Other Notes:
+------------
+I used IntelliJ
