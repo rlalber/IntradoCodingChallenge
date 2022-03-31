@@ -1,6 +1,7 @@
 package intrado.schoolmessenger.coding.challenge.emailservice.service.impl;
 
 import com.google.gson.Gson;
+import intrado.schoolmessenger.coding.challenge.emailservice.EmailServiceConfig;
 import intrado.schoolmessenger.coding.challenge.emailservice.pojo.EmailMessage;
 import intrado.schoolmessenger.coding.challenge.emailservice.service.EmailSenderService;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -19,10 +20,6 @@ import java.sql.Timestamp;
 @Service
 public class EmailSenderServiceImpl implements EmailSenderService
 {
-    private final String ARCHIVE_DIR = "archive";
-    private final String ARCHIVE_FILE = "EmailMessage";
-    private final String ARCHIVE_TYPE = "json";
-    private final String FROM = "rlalber1@gmail.com";
     private final JavaMailSender mailSender;
     private Logger logger = LogManager.getLogger(EmailSenderServiceImpl.class);
 
@@ -43,7 +40,7 @@ public class EmailSenderServiceImpl implements EmailSenderService
             simpleMailMessage.setTo(emailMessage.getTo());
             simpleMailMessage.setSubject(emailMessage.getSubject());
             simpleMailMessage.setText(emailMessage.getMessage());
-            simpleMailMessage.setFrom(FROM);
+            simpleMailMessage.setFrom(EmailServiceConfig.FROM);
 
             this.mailSender.send(simpleMailMessage);
             archiveEmail(emailMessage);
@@ -59,12 +56,13 @@ public class EmailSenderServiceImpl implements EmailSenderService
         return result;
     }
 
-    private void archiveEmail(EmailMessage emailMessage)
+    public String archiveEmail(EmailMessage emailMessage)
     {
+        String result = "Success";
         logger.info("<=== Entered EmailSenderServiceImpl.archiveEmail()");
 
         Timestamp timestamp = new Timestamp(System.currentTimeMillis());
-        String filename = String.format("%s\\%s.%s.%s", ARCHIVE_DIR, ARCHIVE_FILE, timestamp.getTime(), ARCHIVE_TYPE);
+        String filename = String.format("%s\\%s.%s.%s", EmailServiceConfig.ARCHIVE_DIR, EmailServiceConfig.ARCHIVE_FILE, timestamp.getTime(), EmailServiceConfig.ARCHIVE_TYPE);
         Gson gson = new Gson();
         String emailMessageJsonStr = gson.toJson(emailMessage);
 
@@ -74,15 +72,19 @@ public class EmailSenderServiceImpl implements EmailSenderService
         try
         {
             Path filePath = Paths.get(filename);
-            logger.info("<========= Path.get()="+filePath.getFileName());
+            logger.info(String.format("<========= In EmailSenderServiceImple.archiveEmail() Path.get()=%s", filePath.getFileName()));
             Files.write(filePath, emailMessageJsonStr.getBytes(StandardCharsets.UTF_8));
         }
         catch (java.io.IOException e)
         {
-            logger.error(String.format("Error writing EmailMessage EmailMessage to json file '%s', exception is: %s", filename, e.getMessage()));
+            logger.error("<=== Exception="+e.getMessage());
+            logger.error(String.format("Error writing EmailMessage to json file '%s', exception is: %s", filename, e.getMessage()));
+            result = String.format("Exception: %s", e.getMessage());
         }
 
         logger.info("<=== Exiting EmailSenderServiceImple.archiveEmail()");
+
+        return result;
     }
 
     public String emailHistory( )
@@ -90,14 +92,14 @@ public class EmailSenderServiceImpl implements EmailSenderService
         logger.info("<=== Entered EmailSenderServiceImple.meailHistory()");
         StringBuilder result = new StringBuilder("[\n");
 
-        File f = new File(ARCHIVE_DIR);
+        File f = new File(EmailServiceConfig.ARCHIVE_DIR);
 
         FilenameFilter filter = new FilenameFilter()
         {
             @Override
             public boolean accept(File f, String name)
             {
-                return name.endsWith(String.format(".%s", ARCHIVE_TYPE));
+                return name.endsWith(String.format(".%s", EmailServiceConfig.ARCHIVE_TYPE));
             }
         };
 
@@ -107,7 +109,7 @@ public class EmailSenderServiceImpl implements EmailSenderService
         for (String file: filenames)
         {
             logger.info(String.format("<=== filename=%s", file));
-            String filename = String.format("%s\\%s", ARCHIVE_DIR, file);
+            String filename = String.format("%s\\%s", EmailServiceConfig.ARCHIVE_DIR, file);
             logger.info(String.format("<=== Full filename %s", filename));
 
             try
